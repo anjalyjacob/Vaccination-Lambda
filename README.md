@@ -1,5 +1,8 @@
 # Vaccination-Lambda
- Lambda for calling vaccination api regularky with AWS cloudwatch and SES
+ Lambda for calling vaccination api regularly with AWS cloudwatch and SES.
+ 
+ Initially will send email if centers are available then will send email if the center is not available.
+ Time gap is 5 mins
 
  Wrote api calls for Ernakulam and Idukki districts.
  Main api calls is here: https://apisetu.gov.in/public/marketplace/api/cowin
