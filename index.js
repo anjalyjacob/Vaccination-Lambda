@@ -2,25 +2,24 @@ var axios = require('axios');
 var aws = require("aws-sdk");
 const SESCONFIG = {
     apiVersion: '2010-12-01',
-    accessKeyId: '',
-    secretAccessKey: '',
     region: 'ap-south-1'
 }
 var ses = new aws.SES(SESCONFIG);
 exports.handler = (event, context, callback) => {
+    findVaccinationCenters();
+};
 
+const findVaccinationCenters = () => {
+    console.log("findVaccinationCenters");
     var today = new Date();
-    var dd = String(today.getDate()).padStart(2, '0');
+    var dd = String(today.getDate() + 1).padStart(2, '0');
     var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
     var yyyy = today.getFullYear();
     today = dd + '-' + mm + '-' + yyyy;
-
     let url1 = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id=307&date=" + today + "&state_id=17";
     let url2 = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id=306&date=" + today + "&state_id=17";
-
     const requestOne = axios.get(url1);
     const requestTwo = axios.get(url2);
-
     axios.all([requestOne, requestTwo]).then(axios.spread(async (...responses) => {
         // handle success
         var a = responses[0].data.centers;
@@ -43,10 +42,12 @@ exports.handler = (event, context, callback) => {
             data: JSON.stringify({ "count": count })
         })
             .then(function (resp) {
+                console.log("in count")
                 if (resp && resp.data && resp.data.message) {
+                    console.log("in sending message")
                     var params = {
                         Destination: {
-                            ToAddresses: ['to address'],
+                            ToAddresses: ['anjalyjkk021@gmail.com'],
                         },
                         Message: {
                             Body: {
@@ -55,30 +56,33 @@ exports.handler = (event, context, callback) => {
 
                             Subject: { Data: "Vaccination centers" },
                         },
-                        Source: 'from address',
+                        Source: 'anjalyjkk021@gmail.com',
                     };
 
                     var sendPromise = ses.sendEmail(params).promise();
-
                     // Handle promise's fulfilled/rejected states
                     sendPromise.then(
                         function (data) {
                             console.log(data.MessageId);
                         }).catch(function (err) {
-                            console.error(err, err.stack);
-                        });
+                                console.error(err, err.stack);
+                            });
+
                 }
+
             }).catch(errors => {
                 console.log(errors)
+
             });
 
     })).catch(errors => {
-        console.log(errors)
+        findVaccinationCenters();
     });
-};
+}
 
 
 const setData = (centers) => {
+
     var filtered = centers;
     if (filtered.length > 0) {
         let completed = 0;
@@ -130,5 +134,7 @@ const setData = (centers) => {
         if (completed === filtered.length) {
             return loopValues;
         }
+
     }
+
 }
